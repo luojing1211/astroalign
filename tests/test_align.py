@@ -38,6 +38,7 @@ def gauss(shape=(11, 11), center=None, sx=2, sy=2):
 
 
 class TestAlign(unittest.TestCase):
+
     def setUp(self):
         from scipy import signal
         self.h = 512  # image height
@@ -297,11 +298,9 @@ class TestAlign(unittest.TestCase):
 
 
 class TestWCS(unittest.TestCase):
-    def setUp(self):
-        ...
 
     def test_estimate_wcs(self):
-        aa.estimate_wcs(None, None)
+        aa.estimate_wcs(None, None, None)
 
 
 if __name__ == "__main__":
