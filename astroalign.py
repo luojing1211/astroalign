@@ -480,3 +480,54 @@ Return:
             "acceptable transformation.")
 
     return bestfit, best_inlier_idxs
+
+
+def align_by_partial(source, target, align_section, frame=0):
+    """ align_by_partial is a function that aligns two image based on a
+    selected part of the image.
+
+    Parameter
+    ---------
+    source: `~numpy.ndarray`
+        The image that is being aligned with the target.
+    target: `~numpy.ndarray`
+        The target image for the source image to align.
+    align_section: tuple
+        The selected aligning section. It is given by
+        (axis0_start, axis0_end, axis1_start, axis1_end)
+    frame: int, optional
+        The color frame for aligning the images.
+
+    Return
+    ------
+    The aligned source image and the mask for the empty part due to the image
+    moving out side of frame.
+    """
+
+    trans, align_points = aa.find_transform(source[align_section[0]:align_section[1],
+                                                   align_section[2]:align_section[3],
+                                                   frame],
+                                            target[align_section[0]:align_section[1],
+                                                   align_section[2]:align_section[3],
+                                                   frame])
+    # NOTE, align_points are in the order of [axis1, axis0].
+    # I think transform treat axis1 as x axis and axis0 as y axis.
+    shift = np.array(align_section[[2], align_section[0]])
+    target_points2 = align_points[1] + shift
+    source_points2 = align_points[0] + shift
+    new_trans = aa.estimate_transform('similarity', source_points2, target_points2)
+    new = aa.apply_transform(new_trans, source, target)
+    new_image = new[0]
+    # Find the part that is moved out of frame.
+    mask = np.where(new_img.astype('uint8')!=111)
+    return new_image, mask
+
+def rescale(img, source):
+    """ Rescale float64 type of array to uint8 according to the given source imag.
+    """
+    img = np.abs(img)
+    norm_factor = source.max()
+    img = img.astype(np.float64) / norm_factor # normalize the data to 0 - 1
+    img = 255 * img # Now scale by 255
+    final_img = img.astype(np.uint8)
+    return final_img
